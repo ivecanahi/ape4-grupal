@@ -1,4 +1,3 @@
-"""Modelo SIR: datos y población (Parte 1) y simulación con SimPy (Parte 2)."""
 
 import random
 from dataclasses import dataclass

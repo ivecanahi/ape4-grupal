@@ -9,7 +9,7 @@ import random
 
 import simpy
 
-from Datos_poblacion import State, SIRParameters, StepResult, Population
+from datos_y_poblacion  import State, SIRParameters, StepResult, Population
 
 
 class SIRSimulation:
