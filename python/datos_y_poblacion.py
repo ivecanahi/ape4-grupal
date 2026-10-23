@@ -1,3 +1,4 @@
+"""Modelo SIR: datos y población (Parte 1)."""
 
 import random
 from dataclasses import dataclass
@@ -61,7 +62,7 @@ class Population:
         return list(self._states)
 
     def random_contact(self, index: int) -> int:
-        """Índice de un individuo al azar"""
+        """Índice de un individuo al azar, distinto de `index`."""
         # Se elige entre size - 1 posiciones y se salta `index`: una sola llamada al rng.
         contact = self._rng.randrange(self.size - 1)
         return contact + 1 if contact >= index else contact
