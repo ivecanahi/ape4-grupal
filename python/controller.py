@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from .model import SIRParameters, SIRSimulation
-from .view import CsvExporter, ChartView
+from model import SIRParameters, SIRSimulation
+from view import CsvExporter, ChartView, ReportView
 
 
 class SIRController:
@@ -10,9 +10,10 @@ class SIRController:
     def __init__(self, params: SIRParameters, output_dir: str | Path = ".") -> None:
         self.params = params
         self.output_dir = Path(output_dir)
+        self.report_path = self.output_dir / "reporte_python.html"
 
     def run(self):
-        """Ejecuta el modelo, guarda el CSV y crea la gráfica."""
+        """Ejecuta el modelo, guarda el CSV, crea la gráfica y el reporte HTML."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         simulation = SIRSimulation(self.params)
@@ -23,5 +24,8 @@ class SIRController:
 
         CsvExporter().export(results, str(csv_path))
         ChartView().plot(results, str(chart_path))
+        ReportView().render(
+            results, self.params, self.report_path, chart_file=chart_path.name
+        )
 
         return results

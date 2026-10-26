@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from python.controller import SIRController
-from python.model import SIRParameters, SIRSimulation
+from controller import SIRController
+from model import SIRParameters, SIRSimulation
 
 
 class TestSIRSimulation(unittest.TestCase):
@@ -47,6 +47,11 @@ class TestSIRSimulation(unittest.TestCase):
             self.assertTrue(csv_path.is_file())
             self.assertTrue(png_path.is_file())
             self.assertGreater(png_path.stat().st_size, 0)
+            report_path = Path(temp_dir) / "reporte_python.html"
+            self.assertIn(
+                'src="grafica_sir_python.png"',
+                report_path.read_text(encoding="utf-8"),
+            )
 
             with csv_path.open("r", newline="", encoding="utf-8-sig") as file:
                 reader = csv.DictReader(file)

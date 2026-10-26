@@ -5,9 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from datos_y_poblacion import SIRParameters, StepResult
-from simulacion_simpy import SIRSimulation
-from view import ChartView, CsvExporter
+from model import SIRParameters, SIRSimulation, StepResult
+from view import ChartView, CsvExporter, ReportView
 
 HEADER = "tiempo,susceptibles,infectados,recuperados"
 
@@ -55,6 +54,62 @@ class ChartViewTest(unittest.TestCase):
 
             self.assertTrue(path.is_file())
             self.assertGreater(path.stat().st_size, 0)
+
+
+class ReportViewTest(unittest.TestCase):
+    def test_report_explains_practice_and_shows_results(self) -> None:
+        params = SIRParameters()
+        results = SIRSimulation(params).run()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "reporte" / "reporte_python.html"
+
+            ReportView.render(results, params, path, chart_file="grafica.png")
+
+            html = path.read_text(encoding="utf-8")
+        self.assertIn("Modelo SIR", html)
+        self.assertIn("R₀ = β / γ = 3.00", html)
+        self.assertIn('src="grafica.png"', html)
+        self.assertIn("<td>0</td><td>95</td><td>5</td><td>0</td>", html)
+        self.assertEqual(html.count("<tr class=\"row\">"), 101)
+
+    def test_summary_reports_peak_of_infected(self) -> None:
+        results = [
+            StepResult(0, 9, 1, 0),
+            StepResult(1, 6, 4, 0),
+            StepResult(2, 5, 3, 2),
+        ]
+
+        summary = ReportView.summary(results)
+
+        self.assertEqual(summary["peak_infected"], 4)
+        self.assertEqual(summary["peak_time"], 1)
+        self.assertEqual(summary["final"], results[-1])
+        self.assertEqual(summary["attack_rate"], 50.0)
+        self.assertIsNone(summary["end_time"])
+
+    def test_population_grid_draws_one_person_per_individual(self) -> None:
+        grid = ReportView.population_grid(StepResult(0, 95, 5, 0))
+
+        self.assertEqual(grid.count('class="ps"'), 95)
+        self.assertEqual(grid.count('class="pi"'), 5)
+        self.assertEqual(grid.count('class="pr"'), 0)
+
+    def test_report_shows_population_at_start_peak_and_end(self) -> None:
+        params = SIRParameters()
+        results = SIRSimulation(params).run()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "reporte_python.html"
+            ReportView.render(results, params, path)
+            html = path.read_text(encoding="utf-8")
+
+        self.assertEqual(html.count('href="#person"'), 300)
+        self.assertIn("Al inicio · t = 0", html)
+        self.assertIn("Al final · t = 100", html)
+
+    def test_summary_reports_when_outbreak_ends(self) -> None:
+        results = [StepResult(0, 9, 1, 0), StepResult(1, 9, 0, 1), StepResult(2, 9, 0, 1)]
+
+        self.assertEqual(ReportView.summary(results)["end_time"], 1)
 
 
 if __name__ == "__main__":
